@@ -11,7 +11,14 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', ]
+requirements = [
+    'Click>=6.0',
+    'PyDrive>=1.3.1',
+    'python-dateutil>=2.7.3',
+    'PyYAML>=3.13',
+    'requests>=2.19.1',
+    'pytz>=2018.5'
+]
 
 setup_requirements = [ ]
 
@@ -36,7 +43,7 @@ setup(
     description="Appel contains tools to process Google Spreadsheets for attendance records and store results on Canvas.",
     entry_points={
         'console_scripts': [
-            'appel=appel.cli:main',
+            'appel=appel.cli:cli',
         ],
     },
     install_requires=requirements,
