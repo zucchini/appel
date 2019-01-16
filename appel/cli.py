@@ -39,7 +39,7 @@ def grade(canvas_token, course_id, assignment_id, spreadsheet_directory_id, dry_
     click.echo("Loading users with attendance requirements.")
     users = getUsersInCourse(canvas_token, course_id)
     users = getUsersForAssignment(users, canvas_token, assignment_id, course_id)
-    clich.echo("%d users loaded successfully.\n" % len(users))
+    click.echo("%d users loaded successfully.\n" % len(users))
 
     # Get the spreadsheets
     click.echo("Loading attendance sheets.")
