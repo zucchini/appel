@@ -23,8 +23,10 @@ def cli():
 @click.option('--course-id', help="Canvas course ID", prompt="Enter Canvas course ID", type=int)
 @click.option('--assignment-id', help="Canvas assignment ID for grade entry", prompt="Enter Canvas assignment ID for grade entry", type=int)
 @click.option('--spreadsheet-directory-id', help="Google Drive ID for directory containing attendance sheets", prompt="Enter Google Drive ID for directory containing attendance sheets", type=str)
-@click.option('--dry-run', is_flag=True)
-def grade(canvas_token, course_id, assignment_id, spreadsheet_directory_id, dry_run):
+@click.option('--dry-run', is_flag=True, help="Process and show grades without posting to Canvas.")
+@click.option('-l', '--absence-limit', help="Number of absences after which deductions begin.", required=True, type=int)
+@click.option('-d', '--deduction-per-absence', help="Percent deduction to be applied for each absence beyond limit", required=True, type=int)
+def grade(canvas_token, course_id, assignment_id, spreadsheet_directory_id, dry_run, absence_limit, deduction_per_absence):
     """Grade student attendance."""
 
     # Setup Google Drive access
@@ -45,7 +47,7 @@ def grade(canvas_token, course_id, assignment_id, spreadsheet_directory_id, dry_
     click.echo("%d attendance sheets loaded successfully. Total %d attendance entries.\n" % (sum(1 for _ in attendance.values()), sum(sum(1 for k in x.values() if k is not None) for x in attendance.values())))
 
     # Show and enter grades
-    grades = [(user, getPercentScore(attendance[user], absence_limit, absence_penalty_past_limit), getComments(attendance[user])) for user in users]
+    grades = [(user, getPercentScore(attendance[user], absence_limit, deduction_per_absence), getComments(attendance[user])) for user in users]
 
     click.echo("Displaying grades:")
     for user, score, _ in grades:

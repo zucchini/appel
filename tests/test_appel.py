@@ -7,9 +7,7 @@
 import unittest
 from click.testing import CliRunner
 
-from appel import appel
 from appel import cli
-
 
 class TestAppel(unittest.TestCase):
     """Tests for `appel` package."""
