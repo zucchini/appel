@@ -3,10 +3,12 @@
 """Console script for appel."""
 from .canvas import getUsersInCourse, getUsersForAssignment, setUserAssignmentScoresWithComments
 from .policy import getPercentScore, getComments
-from .spreadsheet import parseAllSpreadsheets
+from .spreadsheet import parseAllSpreadsheets, parseSingleSpreadsheet
+from .gradescope import getUserSubmissionTimes
 from collections import Counter
 from pytz import timezone
 from pydrive.auth import GoogleAuth
+from dateutil import parser
 
 import sys
 import click
@@ -75,59 +77,65 @@ def grade(canvas_token, course_id, assignment_id, spreadsheet_directory_id, dry_
 #
 #    print(json.dumps(map, sort_keys=True, indent=4))
 #
-#@cli.command()
-#def timedlab():
-    # """Check Gradescope assignment for any submissions after attendance."""
-    #
-    # # Setup Google Drive access
-    # print("Connecting to Google Drive.")
-    # gauth = GoogleAuth()
-    # gauth.LocalWebserverAuth()
-    # print("Connected to Google Drive successfully.\n")
-    #
-    # # Get the eligible users
-    # print("Loading users with attendance requirements.")
-    # users = getUsersInCourse(canvas_token, course)
-    # users = getUsersForAssignment(users, canvas_token, assignment, course)
-    # print("%d users loaded successfully.\n" % len(users))
-    #
-    # # Get the spreadsheets
-    # print("Loading attendance sheet.")
-    # attendance = parseSingleSpreadsheet(spreadsheet_id, gauth, users)
-    # print("Attendance sheet loaded successfully.\n")
-    #
-    # # Get their submission dates
-    # print("Loading Gradescope submission information.")
-    # submissions = getUserSubmissionTimes(users, gradescope_file)
-    # print("Gradescope submission information loaded successfully.\n")
-    #
-    # # Run the comparison
-    # print("Results:")
-    # for user in users:
-    #     checkout = attendance[user]
-    #     submission_date = submissions[user]
-    #
-    #     if checkout is None and submission_date is None:
-    #         #print("%s did not submit and did not check out. Absent?" % user.name)
-    #         continue
-    #
-    #     if checkout is None and submission_date is not None:
-    #         print("WARNING! %s submitted the assignment but did not check out." % user.name)
-    #         continue
-    #
-    #     if submission_date is None and checkout is not None:
-    #         print("WARNING! %s checked out but did not submit assignment." % user.name)
-    #         continue
-    #
-    #     if checkout is not None and checkout.timestamp is None:
-    #         print("WARNING! %s checked out but no timestamp was recorded, so a validation cannot be made." % user.name)
-    #         continue
-    #
-    #     if submission_date > checkout.timestamp:
-    #         print("WARNING! %s submitted assignment after checking out. Checkout: %s. Last submission: %s" % (user.name, checkout.timestamp.astimezone(TZ).strftime(OUTPUT_DATE_FORMAT), submission_date.astimezone(TZ).strftime(OUTPUT_DATE_FORMAT)))
-    #         continue
-    #
-    # print("\nGoodbye!")
+@cli.command()
+@click.option('--canvas-token', help="Canvas token without the leading 2096~", prompt="Enter Canvas token without the leading 2096~", type=str)
+@click.option('--course-id', help="Canvas course ID", prompt="Enter Canvas course ID", type=int)
+@click.option('--assignment-id', help="Canvas assignment ID for grade entry", prompt="Enter Canvas assignment ID for grade entry", type=int)
+@click.option('--gradescope-file', help="Enter in path to submissions", prompt="Enter in path to submissions")
+@click.option('--spreadsheet-id', help="Google Drive Sheet ID", prompt="Enter Google Drive Sheet id", type=str)
+def timedlab(canvas_token, course_id, assignment_id, gradescope_file, spreadsheet_id):
+    """Check Gradescope assignment for any submissions after attendance."""
+
+    # Setup Google Drive access
+    print("Connecting to Google Drive.")
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+    print("Connected to Google Drive successfully.\n")
+
+    # Get the eligible users
+    print("Loading users with attendance requirements.")
+    users = getUsersInCourse(canvas_token, course_id)
+    users = getUsersForAssignment(users, canvas_token, assignment_id, course_id)
+    print("%d users loaded successfully.\n" % len(users))
+
+    # Get the spreadsheets
+    print("Loading attendance sheet.")
+    attendance = parseSingleSpreadsheet(spreadsheet_id, gauth, users)
+    print("Attendance sheet loaded successfully.\n")
+
+    # Get their submission dates
+    print("Loading Gradescope submission information.")
+    submissions = getUserSubmissionTimes(users, gradescope_file)
+    print("Gradescope submission information loaded successfully.\n")
+
+    # Run the comparison
+    print("Results:")
+    for user in users:
+        checkout = attendance[user]
+        submission_date = submissions[user]
+        if checkout is None and submission_date is None:
+            #print("%s did not submit and did not check out. Absent?" % user.name)
+            continue
+
+        if checkout is None and submission_date is not None:
+            print("WARNING! %s submitted the assignment but did not check out." % user.name)
+            continue
+
+        if submission_date is None and checkout is not None:
+            print("WARNING! %s checked out but did not submit assignment." % user.name)
+            continue
+
+        if checkout is not None and checkout.timestamp is None:
+            print("WARNING! %s checked out but no timestamp was recorded, so a validation cannot be made." % user.name)
+            continue
+
+        submission_date = submission_date.astimezone(TZ).strftime(OUTPUT_DATE_FORMAT)
+        submission_date = parser.parse(submission_date, fuzzy=True)
+        if submission_date.time() > checkout.timestamp.time():
+            print("WARNING! %s submitted assignment after checking out. Checkout: %s. Last submission: %s" % (user.name, checkout.timestamp.strftime(OUTPUT_DATE_FORMAT), submission_date.strftime(OUTPUT_DATE_FORMAT)))
+            continue
+
+    print("\nGoodbye!")
 
 if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover

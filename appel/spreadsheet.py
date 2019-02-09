@@ -110,7 +110,7 @@ def _parseSheet(service, spreadsheet_id, sheet_name, date):
 
         timestamp = None
         try:
-            timestamp = parser.parse(notes)
+            timestamp = parser.parse(notes, fuzzy=True)
         except:
             pass
 
