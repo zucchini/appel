@@ -17,7 +17,9 @@ requirements = [
     'python-dateutil>=2.7.3',
     'PyYAML>=3.13',
     'requests>=2.19.1',
-    'pytz>=2018.5'
+    'pytz>=2018.5',
+    'terminaltables>=3.1.0',
+    'six>=1.12.0'
 ]
 
 setup_requirements = [ ]
