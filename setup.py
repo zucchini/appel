@@ -15,9 +15,11 @@ requirements = [
     'Click>=6.0',
     'PyDrive>=1.3.1',
     'python-dateutil>=2.7.3',
-    'PyYAML>=3.13',
-    'requests>=2.19.1',
-    'pytz>=2018.5'
+    'PyYAML>=4.2b1',
+    'requests>=2.20.0',
+    'pytz>=2018.5',
+    'terminaltables>=3.1.0',
+    'six>=1.12.0'
 ]
 
 setup_requirements = [ ]
