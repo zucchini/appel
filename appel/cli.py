@@ -50,7 +50,7 @@ def grade(canvas_token, course_id, assignment_id, spreadsheet_directory_id, dry_
     click.echo("%d attendance sheets loaded successfully. Total %d attendance entries.\n" % (sum(1 for _ in attendance.values()), sum(sum(1 for k in x.values() if k is not None) for x in attendance.values())))
 
     # Show and enter grades
-    grades = [(user, getPercentScore(attendance[user], absence_limit, deduction_per_absence), getComments(attendance[user])) for user in users]
+    grades = [(user, getPercentScore(attendance[user]), getComments(attendance[user])) for user in users]
 
     click.echo("Displaying grades:")
     for user, score, _ in grades:

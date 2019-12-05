@@ -25,18 +25,23 @@ def parseAllSpreadsheets(directory_id, gauth, users):
     drive = GoogleDrive(gauth)
     service = build('sheets', 'v4', http=gauth.http)
 
-    spreadsheet_list = drive.ListFile({'q': "'%s' in parents and mimeType = 'application/vnd.google-apps.spreadsheet'" % directory_id}).GetList()
+    spreadsheet_list = drive.ListFile({'q': "'%s' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false" % directory_id}).GetList()
     requestTimes.append(datetime.now())
     for ss in spreadsheet_list:
         title = ss['title']
         date = parser.parse(title, ignoretz=True, dayfirst=False).date()
+        total_absent = 0
 
         user_attendance_map = _parseSpreadsheet(service, ss['id'], date)
         for user in users:
             if user.login in user_attendance_map:
                 attendance[user][date] = user_attendance_map[user.login]
             else:
+                total_absent += 1
                 attendance[user][date] = None
+
+        if total_absent > 25:
+            print("Investigate {} ({})".format(title, total_absent))
 
     return attendance
 

@@ -1,4 +1,5 @@
 import requests
+import csv
 from .models import User
 
 course_url = "https://gatech.instructure.com/api/v1/courses/%s/"
@@ -40,9 +41,11 @@ def getUsersInCourse(token, course):
 
     data = getPaginatedItems(url, {"params": payload, "headers": headers})
 
+    id_map = getUserIdMap()
+
     for user in data:
-        print(user)
-        users.append(User(user["name"], user["login_id"], user["sis_user_id"], user["id"]))
+        login_id = id_map[user["sis_user_id"]]
+        users.append(User(user["name"], login_id, user["sis_user_id"], user["id"]))
 
     return users
 
@@ -86,3 +89,20 @@ def setUserAssignmentScoresWithComments(token, course, assignment, grades):
         #print("User %s, score %d%% submitted with status code %d" % (user.name, score, r.status_code))
 
     return success, failure
+
+def getUserIdMap():
+    my_map = {}
+    with open('roster.csv', mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                print('Column names are {}'.format(", ".join(row)))
+                line_count += 1
+
+            my_map[row["GT ID"]] = row["GT Account"]
+            line_count += 1
+
+        print('Processed {} lines.'.format(line_count))
+
+    return my_map

@@ -1,15 +1,11 @@
 GRADE_SPLITTER = " ----------------------------------- "
 
-def getPercentScore(attendance, absence_limit, absence_penalty_past_limit):
-    score = 100
+def getPercentScore(attendance):
+    attended = sum(1 for x in attendance.values() if x is not None)
 
-    absences = sum(1 for x in attendance.values() if x is None)
-    more_than_allowed = absences - absence_limit
+    scale = float(attended) / (len(attendance) - 1)
 
-    if more_than_allowed > 0:
-        score -= more_than_allowed * absence_penalty_past_limit
-
-    return max(score, 0)
+    return int(100 * min(scale, 1))
 
 def getComments(attendance):
     comments = []
